@@ -1,0 +1,35 @@
+#!/bin/sh -eu
+
+KUBECTL_ARGS=""
+
+usage() {
+    echo "Usage: kubectl images [options]\n"
+    echo "Options:"
+    echo "\t-A, --all-namespaces: list accross all namespaces. Overrides the namespace specified with --namespace"
+    echo "\t-l, --selector: label selector"
+    echo "\t-n, --namespace: list for the specified namespace"
+    echo "\t-h, --help: show this help"
+    exit 1
+}
+
+for arg in "$@"; do
+    case $arg in
+        -l|--selector)
+            KUBECTL_ARGS="${KUBECTL_ARGS} -l ${2}"
+            shift 2
+            ;;
+        -n|--namespace)
+            KUBECTL_ARGS="${KUBECTL_ARGS} -n ${2}"
+            shift 2
+            ;;
+        -A|--all-namespaces)
+            KUBECTL_ARGS="${KUBECTL_ARGS} ${1}"
+            shift
+            ;;
+        -h|--help)
+            usage
+            ;;
+    esac
+done
+
+printf "%s\n" $(kubectl get pods ${KUBECTL_ARGS} -o jsonpath="{.items[*].spec.containers[*].image}") | sort -u
